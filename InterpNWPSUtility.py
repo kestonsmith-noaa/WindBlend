@@ -192,6 +192,56 @@ def interpolate_curvilinear_to_pointsMD(lon_in, lat_in, data_in, lon_out, lat_ou
     return interpolated_data
 
 
+def interpolate_curvilinear_to_pointsRRFS(lon_in, lat_in, data_in, lon_out, lat_out):
+    """
+    Performs bilinear-equivalent interpolation from a curvilinear grid to new points.
+
+    Args:
+        lon_in (np.ndarray): 2D array of input longitudes.
+        lat_in (np.ndarray): 2D array of input latitudes.
+        data_in (np.ndarray): 3D array of data values corresponding to (lon_in, lat_in, ntimes).
+        lon_out (np.ndarray or list): Longitudes of the target points.
+        lat_out (np.ndarray or list): Latitudes of the target points.
+
+    Returns:
+        np.ndarray: Interpolated data values at the target points (length(lon_out/lat_out x ntimes)).
+    """
+    # Flatten the input coordinates and data into 1D arrays
+    # griddata expects points as a list of (x, y) tuples or a 2D array
+   
+    points_in = np.vstack((lon_in.flatten(), lat_in.flatten())).T
+   # points_in = np.hstack((lon_in.flatten(), lat_in.flatten()))
+
+    shp=data_in.shape
+    print(shp)
+    nx=shp[0]
+    ny=shp[1]
+    nt=shp[2]
+
+    ns=nx*ny
+    S=np.zeros((ns,nt))
+    #s0=np.zeros((nx,ny))
+    s0=np.zeros((ny,nx))
+    for k in range(nt):
+        s0[:,:]=np.transpose(data_in[:,:,k])
+        #s0[:,:]=data_in[:,:,k]
+        S[:,k] = s0.flatten()
+
+    # Define the target points
+    points_out = np.vstack((lon_out, lat_out)).T
+
+    # Perform the interpolation using scipy.interpolate.griddata with 'linear' method
+    # The 'linear' method in griddata is the appropriate choice for curvilinear data
+    # as it uses triangulation.
+    print(S.shape)
+    print(points_in)
+    print(points_out)
+    
+    interpolated_data = griddata(points_in, S, points_out, method='linear')
+
+    return interpolated_data
+
+
 def GetDomainStrings(k):    
     names=[
         "aer",

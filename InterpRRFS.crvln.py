@@ -23,50 +23,52 @@ t1=np.asarray(data["time"][:])
 u1=np.asarray(data["UGRD_10maboveground"][:,:,:])
 v1=np.asarray(data["VGRD_10maboveground"][:,:,:])
 
+# replace fill values with nan to avoid extrapolation errors
+nan=float('nan')
+
+UX=data["UGRD_10maboveground"]
+fill_value0 = UX._FillValue
+j=np.where(u1==fill_value0)
+u1[j]=nan
+print("fill value=")
+print(fill_value0)
+print(j)
+
+VX=data["VGRD_10maboveground"]
+fill_value0 = VX._FillValue
+j=np.where(v1==fill_value0)
+v1[j]=nan
+
 nt=len(t1)
 
 u=np.zeros((nn,nt))
 v=np.zeros((nn,nt))
 
 from scipy.interpolate import RegularGridInterpolator
-
-xu=np.max(x1)
-yu=np.max(y1)
-xl=np.min(x1)
-yl=np.min(y1)
-
-print("x min="+str(xl) + ", x max="+str(xu))
-print("xi min="+str(np.min(xi)))
-print("xi max="+str(np.max(xi)))
-j=np.where( np.logical_and(   np.logical_and(xi>xl,xi<xu), np.logical_and(yi>yl,yi<yu) ) )
-j=np.array(j).flatten()
-xit=xi[j]
-yit=yi[j]
-print(j.shape)
-print(u.shape)
-
+# This is temporary and should be replaced with xESMF interpolation
 print("start u interp")
-uit=nwps.interpolate_curvilinear_to_pointsRRFS(x1,y1, np.transpose(u1), xit, yit)
-#uit=nwps.interpolate_curvilinear_to_pointsRRFS(x1,y1, u1, xit, yit)
+uit=nwps.interpolate_curvilinear_to_pointsRRFS(x1,y1, np.transpose(u1), xi, yi)
 print("done u interp")
 print("start v interp")
-vit=nwps.interpolate_curvilinear_to_pointsRRSF(x1,y1, np.transpose(v1), xit, yit)
-#vit=nwps.interpolate_curvilinear_to_pointsRRFS(x1,y1, v1, xit, yit)
+vit=nwps.interpolate_curvilinear_to_pointsRRFS(x1,y1, np.transpose(v1), xi, yi)
 print("done v interp")
 
-u[j,:]=uit
-v[j,:]=vit
-
-print("uit")
-print(uit)
-print(uit.shape)
-
-j=np.where(np.isnan(uit+vit))
-fill_value0=-999999
-uit[j]=fill_value0
-vit[j]=fill_value0
-
-#nn=len(xi)
+for k in range(nt):
+    # now filter values outside of range of input values
+    Umax=np.nanmax(u1[k,:,:]);
+    Umin=np.nanmin(u1[k,:,:]);
+    Vmax=np.nanmax(v1[k,:,:]);
+    Vmin=np.nanmin(v1[k,:,:]);
+    print("Umax="+str(Umax))
+    print("Umin="+str(Umin))
+    j=np.where(uit[:,k]>Umax)
+    uit[j,k]=nan
+    j=np.where(uit[:,k]<Umin)
+    uit[j,k]=nan
+    j=np.where(vit[:,k]>Vmax)
+    vit[j,k]=nan
+    j=np.where(vit[:,k]<Vmin)
+    vit[j,k]=nan
 
 MAPSTA=np.ones(nn, dtype=int)
 print(ei.shape)
@@ -129,15 +131,15 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     u_var.units         = 'm/s'
     u_var.standard_name = 'eastward_wind'
     u_var.level = '10 m above ground'
-#    u_var[:,:]=uit[:,:]
-    u_var[:,:]=u[:,:]
+    u_var[:,:]=uit[:,:]
+#    u_var[:,:]=u[:,:]
 
     v_var=ncout.createVariable('vwnd', 'f4', ('node','time'),fill_value    = fill_value0)
     v_var.long_name     = 'northward_wind'
     v_var.units         = 'm/s'
     v_var.standard_name = 'northward_wind'
     v_var.level = '10 m above ground'
-#    v_var[:,:]=vit[:,:]
-    v_var[:,:]=v[:,:]
+    v_var[:,:]=vit[:,:]
+#    v_var[:,:]=v[:,:]
 
     ncout.close
