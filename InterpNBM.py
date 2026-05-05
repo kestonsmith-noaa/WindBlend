@@ -14,6 +14,8 @@ xi=xi+360
 
 flin=sys.argv[1]
 flout=sys.argv[2]
+print("flin="+flin)
+print("flout="+flout)
 
 data = nc.Dataset(flin,"r")
 x1=np.asarray(data["longitude"][:])

@@ -75,7 +75,7 @@ def haversine_min_distanceX(lat1, lon1, lats2, lons2):
 
 def QuickDistance(lat1, lon1, lats2, lons2):
     deg2kmY=111.
-    deg2kmX=np.cos( np.pi * lat1 / 180.)
+    deg2kmX=np.cos( np.pi * lat1 / 180.)*deg2kmY
     d= np.min(  np.sqrt( (  (lat1-lats2)*deg2kmY)**2 + ((lon1-lons2)*deg2kmX)**2 )  )
     return d
 
@@ -123,6 +123,7 @@ nt=len(t1)
 
 x1=np.asarray(data["longitude"][:])
 y1=np.asarray(data["latitude"][:])
+
 print("x1,y1 shape")
 nx=x1.shape[0]
 ny=x1.shape[1]
@@ -139,8 +140,10 @@ xb=np.hstack((x1[1,:],x1[:,ny-1].T,x1[nx-1,:],x1[:,1].T))
 yb=np.hstack((y1[1,:],y1[:,ny-1].T,y1[nx-1,:],y1[:,1].T))
 
 #convert to radians for more efficient distance calculation
-ybr, xbr = np.radians(yb), np.radians(xb)
-yir, xir = np.radians(yi), np.radians(xi)
+ybr = np.radians(yb)
+xbr = np.radians(xb)
+yir = np.radians(yi)
+xir = np.radians(xi)
 
 np.savetxt('xbyb.txt', np.vstack((xb,yb)))
 np.savetxt('xiyi.txt', np.vstack((xi,yi)))
@@ -156,7 +159,7 @@ dist2bnd=np.zeros(nn)
 for k in range(nn):
 #    dist2bnd[k]=haversine_min_distance(yi[k],xi[k],np.array(yb),np.array(xb))
 #    dist2bnd[k]=haversine_min_distanceX(yir[k],xir[k],np.array(ybr),np.array(xbr))
-    dist2bnd[k]=QuickDistance(yi[k],xi[k],yb,xb)
+    dist2bnd[k]=QuickDistance(yir[k],xir[k],ybr,xbr)
     if k%10000==0:
         print(str(k)+":"+ str(nn)+":"+str(k/nn) )
         print(dist2bnd[k])
