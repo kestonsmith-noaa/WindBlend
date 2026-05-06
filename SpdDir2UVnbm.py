@@ -2,7 +2,7 @@ import os
 import argparse
 import numpy as np
 import netCDF4 as nc
-import jigsawpy
+#import jigsawpy
 import sys
 import math
 flin=sys.argv[1] 
