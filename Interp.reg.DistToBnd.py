@@ -15,8 +15,8 @@ def QuickDistance(lat1, lon1, lats2, lons2):
 def QuickDistanceRegGrd(lat1, lon1, lats2, lons2):
     deg2kmY=111.
     deg2kmX = np.cos( np.pi * lat1 / 180.)*deg2kmY
-    dlat = deg2kmY*np.min( [np.abs( lat1-lats2[0]), np.abs( lat1-lats2[1])] ) 
-    dlon = deg2kmX*np.min( [np.abs( lon1-lons2[0]), np.abs( lon1-lons2[1])] ) 
+    dlat = deg2kmY * np.min( [ np.abs( lat1-lats2[0]), np.abs( lat1-lats2[1])] ) 
+    dlon = deg2kmX * np.min( [ np.abs( lon1-lons2[0]), np.abs( lon1-lons2[1])] ) 
     d = np.min([dlat,dlon])
     return d
 
@@ -65,9 +65,11 @@ vit[j]=fill_value0
 ##################################################################################
 nx=len(x1)
 ny=len(y1)
-xb=np.hstack( (x1[1]+0*y1, x1        , x1[nx-1]+0*y1, x1            ) )
-yb=np.hstack( (y1        , y1[1]+0*x1, y1           , y1[ny-1]+0*x1 ) )
+#xb=np.hstack( (x1[0]+0*y1, x1        , x1[nx-1]+0*y1, x1            ) )
+#yb=np.hstack( (y1        , y1[0]+0*x1, y1           , y1[ny-1]+0*x1 ) )
 
+xb=[np.min(x1),np.max(x1)]
+yb=[np.min(y1),np.max(y1)]
 dist2bnd=np.zeros(nn)
 for k in range(nn):
     dist2bnd[k]=QuickDistanceRegGrd(yi[k],xi[k],yb,xb)
