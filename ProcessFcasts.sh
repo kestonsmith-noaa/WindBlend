@@ -1,27 +1,15 @@
 #!/bin/bash
-#SBATCH --job-name=ProcessFcasts     # Job name
-#SBATCH --mail-type=END             # Mail events (BEGIN, END, FAIL, ALL)
-##SBATCH --mail-user=keston.smith@noaa.gov  # Where to send mail
-#SBATCH --mem-per-cpu=256000mb         # Memory per processor
-#SBATCH --time=00:29:00             # Time limit hrs:min:sec
-#SBATCH --output=ProcessFcasts.out    # Standard output/error
-##SBATCH --exclusive=user
-#SBATCH --error=ProcessFcasts.err
-##SBATCH --account=marine-cpu
-#SBATCH -q debug
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
 
 
 
-module purge
-module load python/3.11
-module load rdhpcs-conda/25.11.0
-conda activate xesmf_env
+#module purge
+#module load python/3.11
+#module load rdhpcs-conda/25.11.0
+conda activate xesmf_envb
 
 pip list -v
 
-date="20260502"
+date="20260507"
 cycl="00"
 winddir="forecasts/wind.$date.$cycl"
 outdir="rwps_winds.$date.$cycl"
