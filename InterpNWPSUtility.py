@@ -118,7 +118,7 @@ def loadWW3Mesh(fl):
 
 import numpy as np
 from scipy.interpolate import griddata
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 def interpolate_curvilinear_to_points(lon_in, lat_in, data_in, lon_out, lat_out):
     """
