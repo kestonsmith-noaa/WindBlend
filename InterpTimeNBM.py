@@ -41,6 +41,7 @@ v[jb]=nan
 
 #make sorted union of times in both forecasts
 tf = np.union1d(t, t1)
+
 #eliminate times occuring outside the range of arg1 to avoid extrapolation
 j=np.where( np.logical_and( tf>=np.min(t) , tf<=np.max(t)  )  )
 print(j)
