@@ -51,6 +51,7 @@ echo "python3 SpdDir2UVnbm.py $nbm_oc $nbm_oc_uv"
 python3 SpdDir2UVnbm.py $nbm_oc $nbm_oc_uv
 
 #interpolate(spatial) nbm wind forecasts to RWPS nodes
+#fix problem with nbm vs rrfs longitude
 rm $rwps_oc
 echo "python3 Interp.reg.DistToBnd.py $nbm_oc_uv $rwps_oc"
 python3 Interp.reg.DistToBnd.nbm.py $nbm_oc_uv $rwps_oc
