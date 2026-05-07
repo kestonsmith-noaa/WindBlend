@@ -86,3 +86,7 @@ rm $rwps_conus
 echo "python3 Interp.crvln.esmf.DistToBnd.py $rrfs_conus $rwps_conus"
 python3 Interp.crvln.esmf.DistToBnd.py $rrfs_conus $rwps_conus
 
+#Blend rrfs winds with nbm
+python3 BlendNBMwRRFS.LinVar.py $date $cycl
+
+

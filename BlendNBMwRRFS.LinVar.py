@@ -25,14 +25,16 @@ rwps_oc_ti=outdir+"/nbm."+datestr+"."+cycl+".wind10m.oc.ti.nc"
 
 rwps_wind_out=outdir+"/rwps.windblend."+datestr+"."+cycl+".wind10m.nc"
 
+BackgroundVariance=100. #variance for nbm
 
 LocalFS  = [ rwps_pr, rwps_hi, rwps_ak, rwps_conus, rwps_na] #file names
-VarFS    = [ 1.      , 1.    , 4.      , 9.       , 25.    ] # m m /s /s
-LambdaFS = [ 50.     , 200.  , 300.    , 500.     , 1000.  ] #km
+VarFS    = [ 4.     , 4.    , 9.      , 16.       , 25.    ] # m m /s /s
+LambdaFS = [ 150.   , 200.  , 500.    , 1000.     , 1500.  ] #km
 
-LocalFS  = [ rwps_pr, rwps_hi, rwps_ak ] #file names
-VarFS    = [ 1.      , 1.    , 4.      ] # m m /s /s
-LambdaFS = [ 150.     , 250.  , 1000.    ] #km
+
+#LocalFS  = [ rwps_pr, rwps_hi, rwps_ak ] #file names
+#VarFS    = [ 1.      , 1.    , 4.      ] # m m /s /s
+#LambdaFS = [ 150.     , 250.  , 1000.    ] #km
 
 print("updating background forecast "+rwps_oc_ti+ "with forecasts:")
 print(LocalFS)
@@ -49,11 +51,8 @@ e=np.asarray(data["tri"][:,:])
 
 nt=len(t)
 nn=len(x)
-print("e0")
-print(e.shape)
 ne=e.shape[1]
 
-BackgroundVariance=100.
 var0=BackgroundVariance+np.zeros((nn,nt)) # prior variance for BG field 
 
 nFS=len(VarFS)
@@ -65,7 +64,7 @@ for jFS in range(nFS):
     vm=np.asarray(datam["vwnd"][:,:])
     dm=np.asarray(datam["dist2bnd"][:])
     tm=np.asarray(datam["time"][:])
-    
+
     #Set fill values to nan
     nan=float('nan')
     fill_valueu = datam["uwnd"]._FillValue
