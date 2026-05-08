@@ -28,7 +28,8 @@ flout=sys.argv[2]
 mshfl="meshes/RWPS.V0a.msh"
 xi, yi, ei = nwps.loadWW3Mesh(mshfl)
 nn=len(xi)
-xi=xi+360
+if np.mean(xi)<0:
+	xi=xi+360.
 
 data = nc.Dataset(flin,"r")
 t1=np.asarray(data["time"][:])
@@ -38,6 +39,8 @@ nt=len(t1)
 
 x1=np.asarray(data["longitude"][:])
 y1=np.asarray(data["latitude"][:])
+if np.mean(np.mean(x1))<0:
+        x1=x1+360.
 
 print("x1,y1 shape")
 nx=x1.shape[0]

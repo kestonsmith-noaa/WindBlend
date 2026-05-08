@@ -23,14 +23,16 @@ def QuickDistanceRegGrd(lat1, lon1, lats2, lons2):
 mshfl="meshes/RWPS.V0a.msh"
 xi, yi, ei = nwps.loadWW3Mesh(mshfl)
 nn=len(xi)
-xi=xi+360
+if np.mean(xi)<0:
+    xi=xi+360.
 
 flin=sys.argv[1]
 flout=sys.argv[2]
 
 data = nc.Dataset(flin,"r")
 x1=np.asarray(data["longitude"][:])
-x1=x1+360 # rrfs hi and pr domains [-180,180] 
+if np.mean(x1)<0:
+    x1=x1+360. # rrfs hi and pr domains [-180,180] 
 y1=np.asarray(data["latitude"][:])
 t1=np.asarray(data["time"][:])
 u1=np.asarray(data["UGRD_10maboveground"][:,:,:])
@@ -57,7 +59,6 @@ j=np.where(np.isnan(uit+vit))
 fill_value0=-999999
 uit[j]=fill_value0
 vit[j]=fill_value0
-
 
 ##################################################################################
 # Compute distance to boundary for each node in mesh:

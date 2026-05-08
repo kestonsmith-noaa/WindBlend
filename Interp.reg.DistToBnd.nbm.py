@@ -23,17 +23,37 @@ def QuickDistanceRegGrd(lat1, lon1, lats2, lons2):
 mshfl="meshes/RWPS.V0a.msh"
 xi, yi, ei = nwps.loadWW3Mesh(mshfl)
 nn=len(xi)
-xi=xi+360
+if np.mean(xi)<0:
+    xi=xi+360
 
 flin=sys.argv[1]
 flout=sys.argv[2]
 
 data = nc.Dataset(flin,"r")
 x1=np.asarray(data["longitude"][:])
+if np.mean(x1)<0:
+    x1=x1+360
+
 y1=np.asarray(data["latitude"][:])
 t1=np.asarray(data["time"][:])
 u1=np.asarray(data["UGRD_10maboveground"][:,:,:])
 v1=np.asarray(data["VGRD_10maboveground"][:,:,:])
+
+xi0=xi
+yi0=yi
+#################################################
+#FIT RWPS EDGE POINTS INTO NBM DOMAIN
+j=np.where( xi < np.min(x1) )
+xi[j]=np.min(x1)
+j=np.where( xi > np.max(x1) )
+xi[j]=np.max(x1)
+
+j=np.where( yi < np.min(y1) )
+yi[j]=np.min(y1)
+j=np.where( yi > np.max(y1) )
+yi[j]=np.max(y1)
+#################################################
+
 
 nt=len(t1)
 u=np.zeros((nn,nt))
@@ -94,14 +114,14 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     lon_var.long_name     = 'longitude'
     lon_var.standard_name = 'longitude'
     lon_var.axis          = 'X'
-    lon_var[:]=xi[:]
+    lon_var[:]=xi0[:]
 
     lat_var=ncout.createVariable('latitude', 'f8', ('node',))
     lat_var.units         = 'degree_north'
     lat_var.long_name     = 'latitude'
     lat_var.standard_name = 'latitude'
     lat_var.axis          = 'Y'
-    lat_var[:]=yi[:]
+    lat_var[:]=yi0[:]
 
 #    time_var=ncout.createVariable('time', 'f8', ('time',))
 #    time_var.units         = 'days since 1990-01-01 00:00:00'
