@@ -20,7 +20,7 @@ data0 = nc.Dataset(flin,"r")
 
 t=np.asarray(data0["time"][:])
 u=np.asarray(data0["uwnd"][:,:])
-v=np.asarray(data0["uwnd"][:,:])
+v=np.asarray(data0["vwnd"][:,:])
 
 x=np.asarray(data0["longitude"][:])
 y=np.asarray(data0["latitude"][:])
