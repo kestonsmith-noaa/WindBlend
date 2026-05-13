@@ -108,8 +108,32 @@ for jFS in range(nFS):
             v[ng0,k]=v[ng0,k]+(var0[ng0,k]/(var0[ng0,k]+varm[ng0]))*(vm[ng0,j]-v[ng0,k])
     #        var0[ng0,k]=var0[ng0,k] * ( 1. - ( var0[ng0,k] / (var0[ng0,k]+varm[ng0] ) ) )
             var0[ng0,k]=var0[ng0,k] * ( varm[ng0] / ( var0[ng0,k]+varm[ng0] ) )
-         
-            
+
+
+  Grid name : Inlet                         
+
+  Comment character is '$'
+
+
+#  Description of inputs
+# --------------------------------------------------
+#       Input type        : winds         
+#       Format type       : pre-processed file  
+
+#           File name         : ../../forcing/rwps.windblend.20260502.00.wind10m.nc                             
+#           Dimension along x : time
+#           Dimension along y : 
+#           Field component 1 : uwnd
+#           Field component 2 : vwnd
+
+# *** WAVEWATCH III WARNING IN W3PRNC : 
+#     calendar ATTRIBUTE NOT DEFINED
+#     DEFAULTING TO "standard" CALENDAR
+#     INPUT FILE MUST RESPECT STANDARD/GREGORIAN CALENDAR
+
+# *** WAVEWATCH III ERROR IN W3PRNC : 
+#     _FillValue ATTRIBUTE NOT DEFINED FOR : uwnd
+fill_value0=-999999
 
 with nc.Dataset(rwps_wind_out, 'w', format='NETCDF4') as ncout:
     ncout.createDimension('level' , 1)  
@@ -152,16 +176,16 @@ with nc.Dataset(rwps_wind_out, 'w', format='NETCDF4') as ncout:
     tri_var.standard_name = 'element list'
     tri_var[:]=e
 
-#    u_var=ncout.createVariable('uwnd', 'f4', ('node','time'),fill_value    = fill_value0)
-    u_var=ncout.createVariable('uwnd', 'f4', ('node','time'))
+    u_var=ncout.createVariable('uwnd', 'f4', ('node','time'),fill_value    = fill_value0)
+#    u_var=ncout.createVariable('uwnd', 'f4', ('node','time'))
     u_var.long_name     = 'eastward_wind'
     u_var.units         = 'm/s'
     u_var.standard_name = 'eastward_wind'
     u_var.level = '10 m above ground'
     u_var[:,:]=u[:,:]
 
-#    v_var=ncout.createVariable('vwnd', 'f4', ('node','time'),fill_value    = fill_value0)
-    v_var=ncout.createVariable('vwnd', 'f4', ('node','time'))
+    v_var=ncout.createVariable('vwnd', 'f4', ('node','time'),fill_value    = fill_value0)
+#    v_var=ncout.createVariable('vwnd', 'f4', ('node','time'))
     v_var.long_name     = 'northward_wind'
     v_var.units         = 'm/s'
     v_var.standard_name = 'northward_wind'
