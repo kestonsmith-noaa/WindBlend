@@ -82,6 +82,8 @@ for k in range(nt):
         uf[k,:]=u[:,j].T
         vf[k,:]=v[:,j].T
 
+MAPSTA=np.ones(nn, dtype=int)
+
 with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
 
     ncout.createDimension('level' , 1)  
@@ -113,10 +115,22 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     time_var.reference_date = '2026.04.28 00:00:00 UTC'
     time_var[:]=tf[:]
 
-    tri_var=ncout.createVariable('tri', 'i4', ('noel','element'))
+    tri_var=ncout.createVariable('tri', 'i4', ('element','noel'))
     tri_var.long_name     = 'element list'
     tri_var.standard_name = 'element list'
-    tri_var[:]=e
+    tri_var[:,:]=e.T
+
+    map_var=ncout.createVariable('MAPSTA', 'i2', ('node',))
+    map_var.units         = '1'
+    map_var.long_name     = 'status map'
+    map_var.standard_name = 'status map'
+    map_var.axis          = 'node'
+    map_var[:]=MAPSTA[:]
+
+#    tri_var=ncout.createVariable('tri', 'i4', ('noel','element'))
+#    tri_var.long_name     = 'element list'
+#    tri_var.standard_name = 'element list'
+#    tri_var[:]=e
 
     d_var=ncout.createVariable('dist2bnd', 'f4', ('node',))
     d_var.long_name     = 'distance to boundary'
@@ -124,18 +138,20 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     d_var.standard_name = 'distance to boundary'
     d_var[:]=d[:]
 
-    u_var=ncout.createVariable('uwnd', 'f4', ('node','time'),fill_value    = fill_value0)
+#    u_var=ncout.createVariable('uwnd', 'f4', ('node','time'),fill_value    = fill_value0)
+    u_var=ncout.createVariable('uwnd', 'f4', ('time','node'),fill_value    = fill_value0)
     u_var.long_name     = 'eastward_wind'
     u_var.units         = 'm/s'
     u_var.standard_name = 'eastward_wind'
     u_var.level = '10 m above ground'
-    u_var[:,:]=uf[:,:].T
+    u_var[:,:]=uf[:,:]
 
-    v_var=ncout.createVariable('vwnd', 'f4', ('node','time'),fill_value    = fill_value0)
+#    v_var=ncout.createVariable('vwnd', 'f4', ('node','time'),fill_value    = fill_value0)
+    v_var=ncout.createVariable('vwnd', 'f4', ('time','node'),fill_value    = fill_value0)
     v_var.long_name     = 'northward_wind'
     v_var.units         = 'm/s'
     v_var.standard_name = 'northward_wind'
     v_var.level = '10 m above ground'
-    v_var[:,:]=vf[:,:].T
+    v_var[:,:]=vf[:,:]
 
     ncout.close

@@ -51,7 +51,7 @@ e=np.asarray(data["tri"][:,:])
 
 nt=len(t)
 nn=len(x)
-ne=e.shape[1]
+ne=e.shape[0]
 
 var0=BackgroundVariance+np.zeros((nn,nt)) # prior variance for BG field 
 
@@ -60,8 +60,10 @@ for jFS in range(nFS):
     flm=LocalFS[jFS]
     print("updating forecast winds based on: "+flm)
     datam = nc.Dataset(flm,"r")
-    um=np.asarray(datam["uwnd"][:,:])
-    vm=np.asarray(datam["vwnd"][:,:])
+
+    um=np.asarray(datam["uwnd"][:,:]).T
+    vm=np.asarray(datam["vwnd"][:,:]).T
+
     dm=np.asarray(datam["dist2bnd"][:])
     tm=np.asarray(datam["time"][:])
 
@@ -109,12 +111,6 @@ for jFS in range(nFS):
     #        var0[ng0,k]=var0[ng0,k] * ( 1. - ( var0[ng0,k] / (var0[ng0,k]+varm[ng0] ) ) )
             var0[ng0,k]=var0[ng0,k] * ( varm[ng0] / ( var0[ng0,k]+varm[ng0] ) )
 
-
-  Grid name : Inlet                         
-
-  Comment character is '$'
-
-
 #  Description of inputs
 # --------------------------------------------------
 #       Input type        : winds         
@@ -133,7 +129,11 @@ for jFS in range(nFS):
 
 # *** WAVEWATCH III ERROR IN W3PRNC : 
 #     _FillValue ATTRIBUTE NOT DEFINED FOR : uwnd
+
+MAPSTA=np.ones(nn, dtype=int)
+
 fill_value0=-999999
+
 
 with nc.Dataset(rwps_wind_out, 'w', format='NETCDF4') as ncout:
     ncout.createDimension('level' , 1)  
@@ -171,12 +171,22 @@ with nc.Dataset(rwps_wind_out, 'w', format='NETCDF4') as ncout:
     time_var.reference_date = '2026.04.28 00:00:00 UTC'
     time_var[:]=t[:]
 
-    tri_var=ncout.createVariable('tri', 'i4', ('noel','element'))
+#    tri_var=ncout.createVariable('tri', 'i4', ('noel','element'))
+    tri_var=ncout.createVariable('tri', 'i4', ('element','noel'))
     tri_var.long_name     = 'element list'
     tri_var.standard_name = 'element list'
-    tri_var[:]=e
+    tri_var[:,:]=e
 
-    u_var=ncout.createVariable('uwnd', 'f4', ('node','time'),fill_value    = fill_value0)
+    map_var=ncout.createVariable('MAPSTA', 'i2', ('node',))
+    map_var.units         = '1'
+    map_var.long_name     = 'status map'
+    map_var.standard_name = 'status map'
+    map_var.axis          = 'node'
+    map_var[:]=MAPSTA[:]
+
+
+    u_var=ncout.createVariable('uwnd', 'f4', ('time','node'),fill_value    = fill_value0)
+#    u_var=ncout.createVariable('uwnd', 'f4', ('node','time'),fill_value    = fill_value0)
 #    u_var=ncout.createVariable('uwnd', 'f4', ('node','time'))
     u_var.long_name     = 'eastward_wind'
     u_var.units         = 'm/s'
@@ -184,7 +194,8 @@ with nc.Dataset(rwps_wind_out, 'w', format='NETCDF4') as ncout:
     u_var.level = '10 m above ground'
     u_var[:,:]=u[:,:]
 
-    v_var=ncout.createVariable('vwnd', 'f4', ('node','time'),fill_value    = fill_value0)
+    v_var=ncout.createVariable('vwnd', 'f4', ('time','node'),fill_value    = fill_value0)
+#    v_var=ncout.createVariable('vwnd', 'f4', ('node','time'),fill_value    = fill_value0)
 #    v_var=ncout.createVariable('vwnd', 'f4', ('node','time'))
     v_var.long_name     = 'northward_wind'
     v_var.units         = 'm/s'
@@ -192,11 +203,12 @@ with nc.Dataset(rwps_wind_out, 'w', format='NETCDF4') as ncout:
     v_var.level = '10 m above ground'
     v_var[:,:]=v[:,:]
 
-    vari_var=ncout.createVariable('postvariance', 'f4', ('node','time'))
-    vari_var.long_name     = 'variance of wind estimate'
+    vari_var=ncout.createVariable('postvariance', 'f4', ('time','node'))
+#    vari_var=ncout.createVariable('postvariance', 'f4', ('node','time'))
+    vari_var.long_name     = 'error variance of wind estimate'
     vari_var.units         = 'm m / s / s'
-    vari_var.standard_name = 'variance of wind estimate'
+    vari_var.standard_name = 'error variance of wind estimate'
     vari_var.level = '10 m above ground'
-    vari_var[:,:]=var0[:,:]
+    vari_var[:,:]=var0[:,:].T
 
     ncout.close
