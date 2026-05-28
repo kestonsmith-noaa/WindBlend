@@ -13,6 +13,7 @@ date="20260507"
 cycl="00"
 winddir="forecasts/wind.$date.$cycl"
 outdir="rwps_winds.$date.$cycl"
+mesh="meshes/RWPS.V0a.msh"
 
 nbm_oc="$winddir/nbm.$date.$cycl.wind10m.oc.nc"
 nbm_oc_uv="$winddir/nbm.$date.$cycl.wind10m.oc.uv.nc"
@@ -41,12 +42,12 @@ python3 SpdDir2UVnbm.py $nbm_oc $nbm_oc_uv
 #interpolate(spatial) nbm wind forecasts to RWPS nodes
 rm $rwps_oc
 echo "python3 Interp.reg.DistToBnd.py $nbm_oc_uv $rwps_oc"
-python3 Interp.reg.DistToBnd.nbm.py $nbm_oc_uv $rwps_oc
+python3 Interp.reg.DistToBnd.nbm.py $nbm_oc_uv $mesh $rwps_oc
 
 #interpolate(spatial) rrfs wind forecasts to RWPS nodes
 rm $rwps_pr
 echo "python3 Interp.reg.DistToBnd.py $rrfs_pr $rwps_pr"
-python3 Interp.reg.DistToBnd.py $rrfs_pr $rwps_pr
+python3 Interp.reg.DistToBnd.py $rrfs_pr $mesh $rwps_pr
 
 #interpolate(temporal) nbm forecast wind to rrfs pr forecast times
 rm $rwps_oc_ti
@@ -56,20 +57,22 @@ python3 InterpTimeNBM.py $rwps_oc $rwps_pr $rwps_oc_ti
 #interpolate(spatial) rrfs wind forecasts to RWPS nodes
 rm $rwps_hi
 echo "python3 Interp.reg.DistToBnd.py $rrfs_hi $rwps_hi"
-python3 Interp.reg.DistToBnd.py $rrfs_hi $rwps_hi
+python3 Interp.reg.DistToBnd.py $rrfs_hi $mesh $rwps_hi
 
 #interpolate(spatial) rrfs wind forecasts to RWPS nodes
 rm $rwps_ak
 echo "python3 Interp.crvln.esmf.DistToBnd.py $rrfs_ak $rwps_ak"
-python3 Interp.crvln.esmf.DistToBnd.py $rrfs_ak $rwps_ak
+python3 Interp.crvln.esmf.DistToBnd.py $rrfs_ak $mesh $rwps_ak
 
 #interpolate(spatial) rrfs wind forecasts to RWPS nodes
 rm $rwps_na
 echo "python3 Interp.crvln.esmf.DistToBnd.py $rrfs_na $rwps_na"
-python3 Interp.crvln.esmf.DistToBnd.py $rrfs_na $rwps_na
+python3 Interp.crvln.esmf.DistToBnd.py $rrfs_na $mesh $rwps_na
 
 #interpolate(spatial) rrfs wind forecasts to RWPS nodes
 rm $rwps_conus
 echo "python3 Interp.crvln.esmf.DistToBnd.py $rrfs_conus $rwps_conus"
-python3 Interp.crvln.esmf.DistToBnd.py $rrfs_conus $rwps_conus
+python3 Interp.crvln.esmf.DistToBnd.py $rrfs_conus $mesh $rwps_conus
 
+#Blend rrfs winds with nbm
+python3 BlendNBMwRRFS.LinVar.py $date $cycl $outdir

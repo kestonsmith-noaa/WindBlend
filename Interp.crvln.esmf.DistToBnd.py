@@ -23,9 +23,10 @@ import numpy as np
 import xesmf as xe
 
 flin=sys.argv[1]
-flout=sys.argv[2]
+mshfl=sys.argv[2]
+flout=sys.argv[3]
 
-mshfl="meshes/RWPS.V0a.msh"
+#mshfl="meshes/RWPS.V0a.small.msh"
 xi, yi, ei = nwps.loadWW3Mesh(mshfl)
 nn=len(xi)
 if np.mean(xi)<0:

@@ -24,9 +24,10 @@ import esmpy as ESMF
 import scipy.sparse as sp
 
 flin=sys.argv[1]
-flout=sys.argv[2]
+mshfl=sys.argv[2]
+flout=sys.argv[3]
 
-mshfl="meshes/RWPS.V0a.msh"
+#mshfl="meshes/RWPS.V0a.msh"
 xi, yi, ei = nwps.loadWW3Mesh(mshfl)
 
 nn=len(xi)

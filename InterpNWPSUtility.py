@@ -57,6 +57,7 @@ def ReadNWPSWind(flin):
 
 
 def loadWW3Mesh(fl):
+    print("mesh file="+fl)
     f=open(fl, 'r')
     header = f.readline() 
     header = f.readline() 

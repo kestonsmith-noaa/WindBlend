@@ -9,9 +9,10 @@ import re
 
 datestr=sys.argv[1]
 cycl=sys.argv[2]
+outdir=sys.argv[3]
 
 winddir="forecasts/wind."+datestr+"."+cycl
-outdir="rwps_winds."+datestr+"."+cycl
+#outdir="rwps_winds."+datestr+"."+cycl
 
 
 rwps_pr=outdir+"/rrfs."+datestr+"."+cycl+".wind10m.pr.nc"

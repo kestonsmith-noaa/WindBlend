@@ -20,14 +20,15 @@ def QuickDistanceRegGrd(lat1, lon1, lats2, lons2):
     d = np.min([dlat,dlon])
     return d
 
-mshfl="meshes/RWPS.V0a.msh"
+flin=sys.argv[1]
+mshfl=sys.argv[2]
+flout=sys.argv[3]
+#mshfl="meshes/RWPS.V0a.small.msh"
 xi, yi, ei = nwps.loadWW3Mesh(mshfl)
 nn=len(xi)
 if np.mean(xi)<0:
     xi=xi+360.
 
-flin=sys.argv[1]
-flout=sys.argv[2]
 
 data = nc.Dataset(flin,"r")
 x1=np.asarray(data["longitude"][:])
