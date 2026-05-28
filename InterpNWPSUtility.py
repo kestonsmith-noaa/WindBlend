@@ -72,7 +72,8 @@ def loadWW3Mesh(fl):
     for i in range(nn):
         A = f.readline()
         values = A.split(" ")
-        if len(values)>4:
+#        print(values)
+        if len(values)>5:
             xi[k]=values[2]
             yi[k]=values[4]
             zi[k]=values[6]
