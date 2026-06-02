@@ -54,7 +54,7 @@ nt=len(t)
 nn=len(x)
 ne=e.shape[0]
 
-var0=BackgroundVariance+np.zeros((nn,nt)) # prior variance for BG field 
+var0=BackgroundVariance+np.zeros((nt,nn)) # prior variance for BG field 
 
 nFS=len(VarFS)
 for jFS in range(nFS):
@@ -62,8 +62,8 @@ for jFS in range(nFS):
     print("updating forecast winds based on: "+flm)
     datam = nc.Dataset(flm,"r")
 
-    um=np.asarray(datam["uwnd"][:,:]).T
-    vm=np.asarray(datam["vwnd"][:,:]).T
+    um=np.asarray(datam["uwnd"][:,:])
+    vm=np.asarray(datam["vwnd"][:,:])
 
     dm=np.asarray(datam["dist2bnd"][:])
     tm=np.asarray(datam["time"][:])
@@ -107,29 +107,14 @@ for jFS in range(nFS):
         j=j[0].tolist()
         if len(j)==1:
             print("j="+str(j)+" : k="+str(k))
-            u[ng0,k]=u[ng0,k]+(var0[ng0,k]/(var0[ng0,k]+varm[ng0]))*(um[ng0,j]-u[ng0,k])
-            v[ng0,k]=v[ng0,k]+(var0[ng0,k]/(var0[ng0,k]+varm[ng0]))*(vm[ng0,j]-v[ng0,k])
-    #        var0[ng0,k]=var0[ng0,k] * ( 1. - ( var0[ng0,k] / (var0[ng0,k]+varm[ng0] ) ) )
-            var0[ng0,k]=var0[ng0,k] * ( varm[ng0] / ( var0[ng0,k]+varm[ng0] ) )
 
-#  Description of inputs
-# --------------------------------------------------
-#       Input type        : winds         
-#       Format type       : pre-processed file  
+            u[k,ng0]=u[k,ng0]+(var0[k,ng0]/(var0[k,ng0]+varm[ng0]))*(um[j,ng0]-u[k,ng0])
+            v[k,ng0]=v[k,ng0]+(var0[k,ng0]/(var0[k,ng0]+varm[ng0]))*(vm[j,ng0]-v[k,ng0])
+            var0[k,ng0]=var0[k,ng0] * ( varm[ng0] / ( var0[k,ng0]+varm[ng0] ) )
 
-#           File name         : ../../forcing/rwps.windblend.20260502.00.wind10m.nc                             
-#           Dimension along x : time
-#           Dimension along y : 
-#           Field component 1 : uwnd
-#           Field component 2 : vwnd
-
-# *** WAVEWATCH III WARNING IN W3PRNC : 
-#     calendar ATTRIBUTE NOT DEFINED
-#     DEFAULTING TO "standard" CALENDAR
-#     INPUT FILE MUST RESPECT STANDARD/GREGORIAN CALENDAR
-
-# *** WAVEWATCH III ERROR IN W3PRNC : 
-#     _FillValue ATTRIBUTE NOT DEFINED FOR : uwnd
+#            u[ng0,k]=u[ng0,k]+(var0[ng0,k]/(var0[ng0,k]+varm[ng0]))*(um[ng0,j]-u[ng0,k])
+#            v[ng0,k]=v[ng0,k]+(var0[ng0,k]/(var0[ng0,k]+varm[ng0]))*(vm[ng0,j]-v[ng0,k])
+#            var0[ng0,k]=var0[ng0,k] * ( varm[ng0] / ( var0[ng0,k]+varm[ng0] ) )
 
 MAPSTA=np.ones(nn, dtype=int)
 
@@ -210,6 +195,6 @@ with nc.Dataset(rwps_wind_out, 'w', format='NETCDF4') as ncout:
     vari_var.units         = 'm m / s / s'
     vari_var.standard_name = 'error variance of wind estimate'
     vari_var.level = '10 m above ground'
-    vari_var[:,:]=var0[:,:].T
+    vari_var[:,:]=var0[:,:]
 
     ncout.close

@@ -141,18 +141,18 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     d_var.standard_name = 'distance to boundary'
     d_var[:]=dist2bnd[:]
 
-    u_var=ncout.createVariable('uwnd', 'f4', ('node','time'),fill_value    = fill_value0)
+    u_var=ncout.createVariable('uwnd', 'f4', ('time','node'),fill_value    = fill_value0)
     u_var.long_name     = 'eastward_wind'
     u_var.units         = 'm/s'
     u_var.standard_name = 'eastward_wind'
     u_var.level = '10 m above ground'
-    u_var[:,:]=uit[:,:]
+    u_var[:,:]=uit[:,:].T
 
-    v_var=ncout.createVariable('vwnd', 'f4', ('node','time'),fill_value    = fill_value0)
+    v_var=ncout.createVariable('vwnd', 'f4', ('time','node'),fill_value    = fill_value0)
     v_var.long_name     = 'northward_wind'
     v_var.units         = 'm/s'
     v_var.standard_name = 'northward_wind'
     v_var.level = '10 m above ground'
-    v_var[:,:]=vit[:,:]
+    v_var[:,:]=vit[:,:].T
 
     ncout.close
