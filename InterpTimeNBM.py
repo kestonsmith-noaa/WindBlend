@@ -60,11 +60,11 @@ ne=e.shape[1]
 noel=e.shape[0]
 
 #set up interpolator for u
-fi = interp1d(t, u.T, axis=0, kind='linear')
+fi = interp1d(t, u, axis=0, kind='linear')
 uf=fi(tf)
 
 #set up interpolator for v
-fi = interp1d(t, v.T, axis=0, kind='linear')
+fi = interp1d(t, v, axis=0, kind='linear')
 vf=fi(tf)
 
 print(uf.shape)
@@ -79,8 +79,10 @@ for k in range(nt):
     if len(j)>0:
         print("mapping exactly back to origonal values at time: "+str(tf[k]))
         j=j[0]
-        uf[k,:]=u[:,j].T
-        vf[k,:]=v[:,j].T
+        uf[k,:]=u[j,:]
+        vf[k,:]=v[j,:]
+#        uf[k,:]=u[:,j]
+#        vf[k,:]=v[:,j]
 
 MAPSTA=np.ones(nn, dtype=int)
 

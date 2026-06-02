@@ -57,6 +57,7 @@ ne=e.shape[0]
 var0=BackgroundVariance+np.zeros((nt,nn)) # prior variance for BG field 
 
 nFS=len(VarFS)
+nan=float('nan')
 for jFS in range(nFS):
     flm=LocalFS[jFS]
     print("updating forecast winds based on: "+flm)
@@ -69,7 +70,6 @@ for jFS in range(nFS):
     tm=np.asarray(datam["time"][:])
 
     #Set fill values to nan
-    nan=float('nan')
     fill_valueu = datam["uwnd"]._FillValue
     j=np.where(um==fill_valueu)
     um[j]=nan
@@ -79,7 +79,7 @@ for jFS in range(nFS):
 
     #Find which spatial points have valid forecasts
     #these are assumed to not change in time 
-    um0=um[:,0]
+    um0=um[0,:]
     ng0=np.where(um0**2>=0) #find points that are valid floats
 
     varm=np.zeros(len(dm))+np.inf
@@ -107,6 +107,9 @@ for jFS in range(nFS):
         j=j[0].tolist()
         if len(j)==1:
             print("j="+str(j)+" : k="+str(k))
+            print(flm)
+            print(u.shape)
+            print(um.shape)
 
             u[k,ng0]=u[k,ng0]+(var0[k,ng0]/(var0[k,ng0]+varm[ng0]))*(um[j,ng0]-u[k,ng0])
             v[k,ng0]=v[k,ng0]+(var0[k,ng0]/(var0[k,ng0]+varm[ng0]))*(vm[j,ng0]-v[k,ng0])

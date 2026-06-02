@@ -1,19 +1,35 @@
 #!/bin/bash
+#PBS -N ESMPy
+#PBS -j oe
+#PBS -S /bin/bash
+#PBS -q dev
+#PBS -A NWPS-DEV
+#PBS -l walltime=00:05:00
+#PBS -l select=1:ncpus=1:mem=8G
+#PBS -l place=excl
+#PBS -l debug=true
 
-
-
-#module purge
-#module load python/3.11
-#module load rdhpcs-conda/25.11.0
-conda activate xesmf_envb
+module reset
+module load PrgEnv-intel/8.5.0
+module load intel/19.1.3.304
+module load craype/2.7.17
+module load cray-mpich/8.1.19
+module load hdf5-C/1.14.0
+module load netcdf-C/4.9.2
+module load esmf-C/8.6.0
+module load ve/hafs/2.1
 
 pip list -v
 
-date="20260507"
-cycl="00"
+
+##date="20260527"
+##cycl="00"
+date=$1
+cycl=$2
 winddir="forecasts/wind.$date.$cycl"
-outdir="rwps_winds.$date.$cycl"
-mesh="meshes/RWPS.V0a.msh"
+outdir="small.rwps_winds.$date.$cycl"
+mesh="meshes/RWPS.V0a.small.msh"
+#mesh="meshes/RWPS.v0.msh"
 
 nbm_oc="$winddir/nbm.$date.$cycl.wind10m.oc.nc"
 nbm_oc_uv="$winddir/nbm.$date.$cycl.wind10m.oc.uv.nc"
@@ -62,17 +78,17 @@ python3 Interp.reg.DistToBnd.py $rrfs_hi $mesh $rwps_hi
 #interpolate(spatial) rrfs wind forecasts to RWPS nodes
 rm $rwps_ak
 echo "python3 Interp.crvln.esmf.DistToBnd.py $rrfs_ak $rwps_ak"
-python3 Interp.crvln.esmf.DistToBnd.py $rrfs_ak $mesh $rwps_ak
+python3 Interp.crvln.esmpy.DistToBnd.py $rrfs_ak $mesh $rwps_ak
 
 #interpolate(spatial) rrfs wind forecasts to RWPS nodes
 rm $rwps_na
 echo "python3 Interp.crvln.esmf.DistToBnd.py $rrfs_na $rwps_na"
-python3 Interp.crvln.esmf.DistToBnd.py $rrfs_na $mesh $rwps_na
+python3 Interp.crvln.esmpy.DistToBnd.py $rrfs_na $mesh $rwps_na
 
 #interpolate(spatial) rrfs wind forecasts to RWPS nodes
 rm $rwps_conus
 echo "python3 Interp.crvln.esmf.DistToBnd.py $rrfs_conus $rwps_conus"
-python3 Interp.crvln.esmf.DistToBnd.py $rrfs_conus $mesh $rwps_conus
+python3 Interp.crvln.esmpy.DistToBnd.py $rrfs_conus $mesh $rwps_conus
 
 #Blend rrfs winds with nbm
 python3 BlendNBMwRRFS.LinVar.py $date $cycl $outdir
