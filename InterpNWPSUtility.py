@@ -72,7 +72,8 @@ def loadWW3Mesh(fl):
     k=0
     for i in range(nn):
         A = f.readline()
-        values = A.split(" ")
+        B=A.lstrip()
+        values = B.split(" ")
 #        print(values)
         if len(values)>5:
             xi[k]=values[2]

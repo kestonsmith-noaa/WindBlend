@@ -24,12 +24,16 @@ pip list -v
 
 ##date="20260527"
 ##cycl="00"
+
 date=$1
 cycl=$2
 winddir="forecasts/wind.$date.$cycl"
-outdir="small.rwps_winds.$date.$cycl"
-mesh="meshes/RWPS.V0a.small.msh"
-#mesh="meshes/RWPS.v0.msh"
+
+##mesh="meshes/RWPS.V0a.small.msh"
+##outdir="small.rwps_winds.$date.$cycl"
+
+mesh="meshes/RWPS.v0.msh"
+outdir="rwps_winds.$date.$cycl"
 
 nbm_oc="$winddir/nbm.$date.$cycl.wind10m.oc.nc"
 nbm_oc_uv="$winddir/nbm.$date.$cycl.wind10m.oc.uv.nc"
