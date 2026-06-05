@@ -10,27 +10,25 @@ import re
 
 datestr=sys.argv[1]
 cycl=sys.argv[2]
-outdir=sys.argv[3]
+meshname=sys.argv[3]
+outdir=sys.argv[4]
 
-winddir="forecasts/wind."+datestr+"."+cycl
-#outdir="rwps_winds."+datestr+"."+cycl
-
-rwps_pr=outdir+"/rrfs."+datestr+"."+cycl+".wind10m.pr.nc"
-rwps_hi=outdir+"/rrfs."+datestr+"."+cycl+".wind10m.hi.nc"
-rwps_na=outdir+"/rrfs."+datestr+"."+cycl+".wind10m.na.nc"
-rwps_ak=outdir+"/rrfs."+datestr+"."+cycl+".wind10m.ak.nc"
-rwps_conus=outdir+"/rrfs."+datestr+"."+cycl+".wind10m.conus.nc"
+rwps_pr=outdir+"/rrfs."+meshname+"."+datestr+"."+cycl+".wind10m.pr.nc"
+rwps_hi=outdir+"/rrfs."+meshname+"."+datestr+"."+cycl+".wind10m.hi.nc"
+rwps_na=outdir+"/rrfs."+meshname+"."+datestr+"."+cycl+".wind10m.na.nc"
+rwps_ak=outdir+"/rrfs."+meshname+"."+datestr+"."+cycl+".wind10m.ak.nc"
+rwps_conus=outdir+"/rrfs."+meshname+"."+datestr+"."+cycl+".wind10m.conus.nc"
 
 #file that contains actual rwps times
-rwps_oc_ti=outdir+"/nbm."+datestr+"."+cycl+".wind10m.oc.ti.nc"
+rwps_oc_ti=outdir+"/nbm."+meshname+"."+datestr+"."+cycl+".wind10m.oc.ti.nc"
 
-rwps_wind_out=outdir+"/rwps.windblend."+datestr+"."+cycl+".wind10m.nc"
+rwps_wind_out=outdir+"/rwps.windblend."+meshname+"."+datestr+"."+cycl+".wind10m.nc"
 
-BackgroundVariance=100. #variance for nbm
+BackgroundVariance=100. #variance for nbm (m m /s /s)
 
-LocalFS  = [ rwps_pr, rwps_hi, rwps_ak, rwps_conus, rwps_na] #file names
-VarFS    = [ 4.     , 4.    , 9.      , 16.       , 25.    ] # m m /s /s
-LambdaFS = [ 150.   , 200.  , 500.    , 1000.     , 1500.  ] #km
+LocalFS  = [ rwps_pr, rwps_hi, rwps_ak, rwps_conus, rwps_na] # file names
+VarFS    = [ 4.     , 4.    , 9.      , 16.       , 25.    ] # (m m /s /s)
+LambdaFS = [ 150.   , 200.  , 500.    , 1000.     , 1500.  ] # (km)
 
 
 #LocalFS  = [ rwps_pr, rwps_hi, rwps_ak ] #file names
@@ -43,7 +41,6 @@ print(LocalFS)
 
 data = nc.Dataset(rwps_oc_ti,"r")
 x=np.asarray(data["longitude"][:])
-#x1=x1-360 # shift grid to RWPS coordinates 
 y=np.asarray(data["latitude"][:])
 t=np.asarray(data["time"][:])
 u=np.asarray(data["uwnd"][:,:])
@@ -92,6 +89,7 @@ for jFS in range(nFS):
 #    varm[ng0]=varm0*lambdam/dm[ng0]
 #    j=np.where(varm<varm0)
 #    varm[j]=varm0
+
     SpatialFunction=dm[ng0]/lambdam
     j=np.where(SpatialFunction>1.)
     SpatialFunction[j]=1.

@@ -21,19 +21,24 @@ module load ve/hafs/2.1
 
 pip list -v
 
-
 ##date="20260527"
 ##cycl="00"
-
 date=$1
 cycl=$2
 winddir="forecasts/wind.$date.$cycl"
+#mesh="meshes/RWPS.V0a.msh"
+mesh=$3
 
-##mesh="meshes/RWPS.V0a.small.msh"
-##outdir="small.rwps_winds.$date.$cycl"
+# extract mesh name from path
+meshname="${mesh##*/}"
+# remove .msh suffix from mesh name
+meshname="${meshname: 0: -4}"
 
-mesh="meshes/RWPS.v0.msh"
-outdir="rwps_winds.$date.$cycl"
+# incorporate meshname date and cycle into output directory name to avoid
+# applying winds to wrong mesh
+outdir="rwps_winds.$meshname.$date.$cycl"
+
+echo "outputing files to: $outdir"
 
 nbm_oc="$winddir/nbm.$date.$cycl.wind10m.oc.nc"
 nbm_oc_uv="$winddir/nbm.$date.$cycl.wind10m.oc.uv.nc"
@@ -44,13 +49,13 @@ rrfs_na="$winddir/rrfs.$date.$cycl.wind10m.na.nc"
 rrfs_ak="$winddir/rrfs.$date.$cycl.wind10m.ak.nc"
 rrfs_conus="$winddir/rrfs.$date.$cycl.wind10m.conus.nc"
 
-rwps_oc="$outdir/nbm.$date.$cycl.wind10m.oc.nc"
-rwps_oc_ti="$outdir/nbm.$date.$cycl.wind10m.oc.ti.nc"
-rwps_pr="$outdir/rrfs.$date.$cycl.wind10m.pr.nc"
-rwps_hi="$outdir/rrfs.$date.$cycl.wind10m.hi.nc"
-rwps_na="$outdir/rrfs.$date.$cycl.wind10m.na.nc"
-rwps_ak="$outdir/rrfs.$date.$cycl.wind10m.ak.nc"
-rwps_conus="$outdir/rrfs.$date.$cycl.wind10m.conus.nc"
+rwps_oc="$outdir/nbm.$meshname.$date.$cycl.wind10m.oc.nc"
+rwps_oc_ti="$outdir/nbm.$meshname.$date.$cycl.wind10m.oc.ti.nc"
+rwps_pr="$outdir/rrfs.$meshname.$date.$cycl.wind10m.pr.nc"
+rwps_hi="$outdir/rrfs.$meshname.$date.$cycl.wind10m.hi.nc"
+rwps_na="$outdir/rrfs.$meshname.$date.$cycl.wind10m.na.nc"
+rwps_ak="$outdir/rrfs.$meshname.$date.$cycl.wind10m.ak.nc"
+rwps_conus="$outdir/rrfs.$meshname.$date.$cycl.wind10m.conus.nc"
 
 mkdir $outdir
 
@@ -95,4 +100,4 @@ echo "python3 Interp.crvln.esmf.DistToBnd.py $rrfs_conus $rwps_conus"
 python3 Interp.crvln.esmpy.DistToBnd.py $rrfs_conus $mesh $rwps_conus
 
 #Blend rrfs winds with nbm
-python3 BlendNBMwRRFS.LinVar.py $date $cycl $outdir
+python3 BlendNBMwRRFS.LinVar.py $date $cycl $meshname $outdir
