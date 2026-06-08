@@ -18,10 +18,7 @@ import re
 import InterpNWPSUtility as nwps
 
 import xarray as xr
-import numpy as np
-#import xesmf as xe
 import esmpy
-
 import scipy.sparse as sp
 
 def VarianceLinearDistanceToBndy(InteriorNodeList, DistanceToBoundary, InteriorVariance, VarianceOnBoundary, LengthScale):

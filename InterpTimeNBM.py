@@ -152,7 +152,7 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     ErrorVariance_var.units         = 'm m /s /s'
     ErrorVariance_var.standard_name = 'variance'
     ErrorVariance_var.level = '10 m above ground'
-    ErrorVariance_var[:,:]=var0[:,:]
+    ErrorVariance_var[:,:]=var0f[:,:]
 
 
 

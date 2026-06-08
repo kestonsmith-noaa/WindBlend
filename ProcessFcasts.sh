@@ -22,12 +22,15 @@ module load ve/hafs/2.1
 pip list -v
 
 ##date="20260527"
-##cycl="00"
+#date=20260602
+#cycl="00"
+#mesh=../../WindBlend/meshes/RWPS.V0a.small.msh
+
 date=$1
 cycl=$2
+mesh=$3
 winddir="forecasts/wind.$date.$cycl"
 #mesh="meshes/RWPS.V0a.msh"
-mesh=$3
 
 # extract mesh name from path
 meshname="${mesh##*/}"
@@ -56,48 +59,27 @@ rwps_hi="$outdir/rrfs.$meshname.$date.$cycl.wind10m.hi.nc"
 rwps_na="$outdir/rrfs.$meshname.$date.$cycl.wind10m.na.nc"
 rwps_ak="$outdir/rrfs.$meshname.$date.$cycl.wind10m.ak.nc"
 rwps_conus="$outdir/rrfs.$meshname.$date.$cycl.wind10m.conus.nc"
-
+rwps_est="$outdir/rwps.est.$meshname.$date.$cycl.wind10m.nc"
 mkdir $outdir
 
-# convert NBM spd,dir to u,v
-rm $rwps_oc_uv
-echo "python3 SpdDir2UVnbm.py $nbm_oc $nbm_oc_uv"
-python3 SpdDir2UVnbm.py $nbm_oc $nbm_oc_uv
+##LocalFS  = [ rwps_pr, rwps_hi, rwps_ak, rwps_conus, rwps_na] # file names
+##VarFS    = [ 4.     , 4.    , 9.      , 16.       , 25.    ] # (m m /s /s)
+##LambdaFS = [ 150.   , 200.  , 500.    , 1000.     , 1500.  ] # (km)
 
-#interpolate(spatial) nbm wind forecasts to RWPS nodes
-rm $rwps_oc
-echo "python3 Interp.reg.DistToBnd.py $nbm_oc_uv $rwps_oc"
-python3 Interp.reg.DistToBnd.nbm.py $nbm_oc_uv $mesh $rwps_oc
+python SpdDir2UVnbm.py $nbm_oc $nbm_oc_uv
+python InterpWindToMesh.py $nbm_oc_uv $mesh $rwps_oc 100. 0.
 
-#interpolate(spatial) rrfs wind forecasts to RWPS nodes
-rm $rwps_pr
-echo "python3 Interp.reg.DistToBnd.py $rrfs_pr $rwps_pr"
-python3 Interp.reg.DistToBnd.py $rrfs_pr $mesh $rwps_pr
+python InterpWindToMesh.py $rrfs_pr $mesh $rwps_pr 4. 150.
 
-#interpolate(temporal) nbm forecast wind to rrfs pr forecast times
-rm $rwps_oc_ti
-echo "python3 InterpTimeNBM.py $rwps_oc $rwps_oc_ti"
-python3 InterpTimeNBM.py $rwps_oc $rwps_pr $rwps_oc_ti
+python InterpTimeNBM.py $rwps_oc $rwps_pr $rwps_oc_ti
 
-#interpolate(spatial) rrfs wind forecasts to RWPS nodes
-rm $rwps_hi
-echo "python3 Interp.reg.DistToBnd.py $rrfs_hi $rwps_hi"
-python3 Interp.reg.DistToBnd.py $rrfs_hi $mesh $rwps_hi
+python InterpWindToMesh.py $rrfs_hi $mesh $rwps_hi 4. 200.
+python InterpWindToMesh.py $rrfs_ak $mesh $rwps_ak 9. 500.
+python InterpWindToMesh.py $rrfs_conus $mesh $rwps_conus 16. 1000.
+python InterpWindToMesh.py $rrfs_na $mesh $rwps_na 25. 1500.
 
-#interpolate(spatial) rrfs wind forecasts to RWPS nodes
-rm $rwps_ak
-echo "python3 Interp.crvln.esmf.DistToBnd.py $rrfs_ak $rwps_ak"
-python3 Interp.crvln.esmpy.DistToBnd.py $rrfs_ak $mesh $rwps_ak
-
-#interpolate(spatial) rrfs wind forecasts to RWPS nodes
-rm $rwps_na
-echo "python3 Interp.crvln.esmf.DistToBnd.py $rrfs_na $rwps_na"
-python3 Interp.crvln.esmpy.DistToBnd.py $rrfs_na $mesh $rwps_na
-
-#interpolate(spatial) rrfs wind forecasts to RWPS nodes
-rm $rwps_conus
-echo "python3 Interp.crvln.esmf.DistToBnd.py $rrfs_conus $rwps_conus"
-python3 Interp.crvln.esmpy.DistToBnd.py $rrfs_conus $mesh $rwps_conus
-
-#Blend rrfs winds with nbm
-python3 BlendNBMwRRFS.LinVar.py $date $cycl $meshname $outdir
+python BlendWindForecasts.py $rwps_oc_ti $rwps_pr blend1.nc
+python BlendWindForecasts.py blend1.nc $rwps_hi blend2.nc
+python BlendWindForecasts.py blend2.nc $rwps_ak blend3.nc
+python BlendWindForecasts.py blend3.nc $rwps_conus blend4.nc
+python BlendWindForecasts.py blend4.nc $rwps_na blend5.nc

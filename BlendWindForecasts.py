@@ -15,10 +15,9 @@ t=np.asarray(data0["time"][:])
 u=np.asarray(data0["uwnd"][:,:])
 v=np.asarray(data0["vwnd"][:,:])
 var=np.asarray(data0["ErrorVariance"][:,:])
-x=ncread(flin0,'longitude');
-y=ncread(flin0,'latitude');
-e=ncread(flin0,'tri');
-
+x=np.asarray(data0["longitude"][:])
+y=np.asarray(data0["latitude"][:])
+e=np.asarray(data0["tri"][:,:])
 
 nt=len(t)
 nn=len(x)
@@ -38,15 +37,16 @@ for k in range(nt):
     j=j[0].tolist()
     if len(j)==1:
             print("j="+str(j)+" : k="+str(k))
-            print(flm)
             print(u.shape)
             print(u1.shape)
+            print(var.shape)
+            print(var1.shape)
 
-            u[k,ng0]=u[k,ng1]+(var[k,ng1]/(var[k,ng1]+var1[ng1]))*(u1[j,ng1]-u[k,ng1])
-            v[k,ng0]=v[k,ng1]+(var[k,ng1]/(var[k,ng1]+var1[ng1]))*(v1[j,ng1]-v[k,ng1])
-            var0[k,ng0]=var[k,ng1] * ( var1[ng1] / ( var[k,ng1]+var1[ng1] ) )
+            u[k,ng1]=u[k,ng1]+(var[k,ng1]/(var[k,ng1]+var1[j,ng1]))*(u1[j,ng1]-u[k,ng1])
+            v[k,ng1]=v[k,ng1]+(var[k,ng1]/(var[k,ng1]+var1[j,ng1]))*(v1[j,ng1]-v[k,ng1])
+            var[k,ng1]=var[k,ng1] * ( var1[j,ng1] / ( var[k,ng1]+var1[j,ng1] ) )
 
-fill_value0=data0["UGRD_10maboveground"]._FillValue
+fill_value0=data0["uwnd"]._FillValue
 
 with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     ncout.createDimension('level' , 1)  
