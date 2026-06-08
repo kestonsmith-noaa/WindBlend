@@ -21,6 +21,7 @@ data0 = nc.Dataset(flin,"r")
 t=np.asarray(data0["time"][:])
 u=np.asarray(data0["uwnd"][:,:])
 v=np.asarray(data0["vwnd"][:,:])
+var0=np.asarray(data0["ErrorVariance"][:,:])
 
 x=np.asarray(data0["longitude"][:])
 y=np.asarray(data0["latitude"][:])
@@ -67,6 +68,10 @@ uf=fi(tf)
 fi = interp1d(t, v, axis=0, kind='linear')
 vf=fi(tf)
 
+#set up interpolator for error variance
+fi = interp1d(t, var0, axis=0, kind='linear')
+var0f=fi(tf)
+
 print(uf.shape)
 print(u.shape)
 #re-insert initial values at times that match initial time points
@@ -81,10 +86,7 @@ for k in range(nt):
         j=j[0]
         uf[k,:]=u[j,:]
         vf[k,:]=v[j,:]
-#        uf[k,:]=u[:,j]
-#        vf[k,:]=v[:,j]
-
-MAPSTA=np.ones(nn, dtype=int)
+        var0f[k,:]=var0[j,:]
 
 with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
 
@@ -122,18 +124,6 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     tri_var.standard_name = 'element list'
     tri_var[:,:]=e.T
 
-    map_var=ncout.createVariable('MAPSTA', 'i2', ('node',))
-    map_var.units         = '1'
-    map_var.long_name     = 'status map'
-    map_var.standard_name = 'status map'
-    map_var.axis          = 'node'
-    map_var[:]=MAPSTA[:]
-
-#    tri_var=ncout.createVariable('tri', 'i4', ('noel','element'))
-#    tri_var.long_name     = 'element list'
-#    tri_var.standard_name = 'element list'
-#    tri_var[:]=e
-
     d_var=ncout.createVariable('dist2bnd', 'f4', ('node',))
     d_var.long_name     = 'distance to boundary'
     d_var.units         = 'km'
@@ -155,5 +145,15 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     v_var.standard_name = 'northward_wind'
     v_var.level = '10 m above ground'
     v_var[:,:]=vf[:,:]
+
+
+    ErrorVariance_var=ncout.createVariable('ErrorVariance', 'f4', ('time','node'),fill_value    = fill_value0)
+    ErrorVariance_var.long_name     = 'forecast error variance'
+    ErrorVariance_var.units         = 'm m /s /s'
+    ErrorVariance_var.standard_name = 'variance'
+    ErrorVariance_var.level = '10 m above ground'
+    ErrorVariance_var[:,:]=var0[:,:]
+
+
 
     ncout.close
