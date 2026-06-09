@@ -24,13 +24,12 @@ pip list -v
 ##date="20260527"
 #date=20260602
 #cycl="00"
-#mesh=../../WindBlend/meshes/RWPS.V0a.small.msh
+#mesh=meshes/RWPS.V0a.small.msh
 
 date=$1
 cycl=$2
 mesh=$3
 winddir="forecasts/wind.$date.$cycl"
-#mesh="meshes/RWPS.V0a.msh"
 
 # extract mesh name from path
 meshname="${mesh##*/}"
@@ -66,20 +65,22 @@ mkdir $outdir
 ##VarFS    = [ 4.     , 4.    , 9.      , 16.       , 25.    ] # (m m /s /s)
 ##LambdaFS = [ 150.   , 200.  , 500.    , 1000.     , 1500.  ] # (km)
 
+#Convert NBM deom speed and direction to u,v
 python SpdDir2UVnbm.py $nbm_oc $nbm_oc_uv
+
 python InterpWindToMesh.py $nbm_oc_uv $mesh $rwps_oc 100. 0.
-
 python InterpWindToMesh.py $rrfs_pr $mesh $rwps_pr 4. 150.
-
-python InterpTimeNBM.py $rwps_oc $rwps_pr $rwps_oc_ti
-
 python InterpWindToMesh.py $rrfs_hi $mesh $rwps_hi 4. 200.
 python InterpWindToMesh.py $rrfs_ak $mesh $rwps_ak 9. 500.
 python InterpWindToMesh.py $rrfs_conus $mesh $rwps_conus 16. 1000.
-python InterpWindToMesh.py $rrfs_na $mesh $rwps_na 25. 1500.
+python InterpWindToMesh.py $rrfs_na $mesh $rwps_na 50. 1500.
+
+#Interpolate NBM in time to times within the NBM forecast covered by the RRFS forecast 
+python InterpTimeNBM.py $rwps_oc $rwps_pr $rwps_oc_ti 
 
 python BlendWindForecasts.py $rwps_oc_ti $rwps_pr blend1.nc
 python BlendWindForecasts.py blend1.nc $rwps_hi blend2.nc
 python BlendWindForecasts.py blend2.nc $rwps_ak blend3.nc
 python BlendWindForecasts.py blend3.nc $rwps_conus blend4.nc
-python BlendWindForecasts.py blend4.nc $rwps_na blend5.nc
+python BlendWindForecasts.py blend4.nc $rwps_na $rwps_est
+

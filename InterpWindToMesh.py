@@ -1,15 +1,13 @@
-
-
+# This is a a set of routines that interpolate wind forecasts to an unstructured 
+# mesh from regular or curvilinear grids (using ESMPY). In addition to interpolation 
+# field the out file contains a spatially variable error variance estimate based on the 
+# distance to the forecast boundary. This error variance is used later to update 
+# dispirate forecasts in a bayesian manner to yield a spatially smooth estimate 
+# incorporating all forecasts. The understanding is that the more local forecast 
+# products are of higher accuracy than the coarser broader scale forecasts
 
 import numpy as np
 import os
-
-def QuickDistance(lat1, lon1, lats2, lons2):
-    deg2kmY=111.
-    deg2kmX=np.cos( np.pi * lat1 / 180.)*deg2kmY
-#    deg2kmX=np.cos( lat1 )*deg2kmY
-    d= np.min(  np.sqrt( (  (lat1-lats2)*deg2kmY)**2 + ((lon1-lons2)*deg2kmX)**2 )  )
-    return d
 
 import datetime
 import netCDF4 as nc
@@ -20,6 +18,12 @@ import InterpNWPSUtility as nwps
 import xarray as xr
 import esmpy
 import scipy.sparse as sp
+
+def QuickDistance(lat1, lon1, lats2, lons2):
+    deg2kmY=111.
+    deg2kmX=np.cos( np.pi * lat1 / 180.)*deg2kmY
+    d= np.min(  np.sqrt( (  (lat1-lats2)*deg2kmY)**2 + ((lon1-lons2)*deg2kmX)**2 )  )
+    return d
 
 def VarianceLinearDistanceToBndy(InteriorNodeList, DistanceToBoundary, InteriorVariance, VarianceOnBoundary, LengthScale):
     Variance=np.zeros(len(DistanceToBoundary))+np.inf
@@ -37,9 +41,9 @@ def VarianceInverseDistanceToBndy(InteriorNodeList, DistanceToBoundary, Interior
     Variance[InteriorNodeList] = InteriorVariance  * SpatialFunction[InteriorNodeList]
     return Variance
 
-
 def CurvilinearGridCreateInterpWeights(xi,yi,x1,y1, weights_file):
 # Compute interpolation weights to interpolate from curvilinear grid (x1,y1) to points (xi,yi)
+# and store in netcdf file using ESMPY
     nx,ny=x1.shape
     nn=len(xi)
     n1=nx*ny
@@ -47,6 +51,7 @@ def CurvilinearGridCreateInterpWeights(xi,yi,x1,y1, weights_file):
     src_lat = y1
     dst_lon=np.zeros((1,nn))
     dst_lat=np.zeros((1,nn))
+    print("nn="+str(nn))
     dst_lon[0,:] = xi[:]
     dst_lat[0,:] = yi[:]
 
@@ -96,6 +101,71 @@ def CurvilinearGridCreateInterpWeights(xi,yi,x1,y1, weights_file):
     np.savetxt('yi.txt', yi)
     
     return
+
+def CalculateDistanceToBoundary(xi,yi,x1,y1):
+# Distance to boundary calculation for use when interpolation envelope corresponds with 
+# interior of curvilinear grid boundary.
+#
+# Inputs:
+#   xi (nn): longitude of unstructured mesh nodes 
+#   yi (nn): latitude of unstructured mesh nodes 
+#   x1 (nx x ny): longitude for interpoltated field
+#   y1 (nx x ny): latitude for interpoltated field
+#
+# Outputs:
+#   dist2bnd (nn) : distance to edge of interpolation envelope.  
+    nx=x1.shape[0]
+    ny=x1.shape[1]
+    xb=np.hstack((x1[1,:],x1[:,ny-1].T,x1[nx-1,:],x1[:,1].T))
+    yb=np.hstack((y1[1,:],y1[:,ny-1].T,y1[nx-1,:],y1[:,1].T))
+    np.savetxt('xbyb.txt', np.vstack((xb,yb)))
+    dist2bnd=np.zeros(nn)
+    for k in range(nn):
+        dist2bnd[k]=QuickDistance(yi[k],xi[k],yb,xb)
+        if k%10000==0:
+            print("calculating distance to boundary, "+str(k)+":"+ str(nn)+":"+str(k/nn) )
+    return dist2bnd
+    #np.savetxt(dist2bnd_file, dist2bnd, '%f')
+
+def CalculateDistanceToInterpEnvelope(xi,yi,fi,SearchWidth):
+# Alternative distance to boundary calculation for use when interpolation envelope is 
+# distinctly interior to curvilinear grid boundary as happens for RRFS NA grid 
+#
+# Inputs:
+#   xi (nn): longitude of unstructured mesh nodes 
+#   yi (nn): latitude of unstructured mesh nodes 
+#   fi (nn): interpolated field on mesh nodes with 'nan' values outside of interpolation envelope
+#   SearchWidth: Computational speed up to remove extra search points in distance to boundary
+#
+# Outputs:
+#   dist2bnd (nn) : distance to edge of interpolation envelope.  dist2bnd[k]=0 if (xi[k],yi[k]) is outside
+#                   of the interpolation envelope
+    dist2bnd=np.zeros(nn)
+    jin = np.where(~np.isnan(fi))[0].tolist()#points inside interpolation envelope
+    jout = np.where(np.isnan(fi))[0].tolist() #points outside interpolation envelope
+    xin=xi[jin]
+    yin=yi[jin]
+    xout=xi[jout]
+    yout=yi[jout]
+    jxU=np.where( xout < np.max(xin)+SearchWidth )[0].tolist()
+    jxD=np.where( xout > np.min(xin)-SearchWidth )[0].tolist()
+    jyU=np.where( yout < np.max(yin)+SearchWidth )[0].tolist()
+    jyD=np.where( yout > np.min(yin)-SearchWidth )[0].tolist()
+    j=list( set(jxU) & set(jxD)  & set(jyU)   & set(jyD)  )
+    xout=xout[j]
+    yout=yout[j]
+    din=np.zeros(len(jin))
+    print(len(xin))
+    print(len(xout))
+    for k in range(len(xin)):
+        din[k]=QuickDistance(yin[k],xin[k],yout,xout)
+        if k%10000==0:
+            print("calculating distance to boundary, "+str(k)+":"+ str(nn)+":"+str(k/nn) )
+    dist2bnd[jin]=din
+    return dist2bnd
+
+
+
 
 # Main program
 
@@ -171,6 +241,7 @@ with xr.open_dataset(weights_file) as ds_s:
    row = ds_s['row'].values
    col = ds_s['col'].values
    weights = ds_s['S'].values
+
 matrix = sp.coo_matrix((weights, (row-1, col-1)), shape=(nn,n1)).tocsr()
 print("sparse interpolation matrix")
 print(matrix)
@@ -204,6 +275,9 @@ v = matrix @ Vp.T
 #Use fill value where the interpolator has no coverage
 row_sum = matrix.sum(axis=1)
 j0=np.where(row_sum==0)
+j0=j0[0].tolist()
+#np.savetxt('rowsum.txt', row_sum)
+#np.savetxt('j0.txt', j0)
 u[j0,:]=nan
 v[j0,:]=nan
 
@@ -222,16 +296,16 @@ if os.path.isfile(dist2bnd_file):
     with xr.open_dataset(dist2bnd_file) as ds_s:
         dist2bnd = ds_s['dist2bnd'].values
 else:
-    nx=x1.shape[0]
-    ny=x1.shape[1]
-    xb=np.hstack((x1[1,:],x1[:,ny-1].T,x1[nx-1,:],x1[:,1].T))
-    yb=np.hstack((y1[1,:],y1[:,ny-1].T,y1[nx-1,:],y1[:,1].T))
-    dist2bnd=np.zeros(nn)
-    for k in range(nn):
-        dist2bnd[k]=QuickDistance(yi[k],xi[k],yb,xb)
-        if k%10000==0:
-            print("calculating distance to boundary, "+str(k)+":"+ str(nn)+":"+str(k/nn) )
-    #np.savetxt(dist2bnd_file, dist2bnd, '%f')
+    domain=flin[len(flin)-5:len(flin)-3] # rrfs or nbm domain
+    print("Domain: "+domain)
+    if domain=="na":
+        print("using CalculateDistanceToInterpEnvelop")
+        # The ESMPY interpolator doesn't cover a significant part of the "na" domain's interior
+        u0=u[:,0]; # grab first interpolation estimate to find valid footprint of interpolator
+        dist2bnd=CalculateDistanceToInterpEnvelope(xi,yi,u0, 1.)
+    else:
+        print("using CalculateDistanceToBoundary")
+        dist2bnd=CalculateDistanceToBoundary(xi,yi,x1,y1)
     with nc.Dataset(dist2bnd_file, 'w', format='NETCDF4') as ncout:
         ncout.createDimension('node' , nn)
         d_var=ncout.createVariable('dist2bnd', 'f4', ('node',))
