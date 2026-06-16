@@ -12,8 +12,8 @@ flout=sys.argv[3]
 
 data0 = nc.Dataset(flin0,"r")
 t=np.asarray(data0["time"][:])
-u=np.asarray(data0["uwnd"][:,:])
-v=np.asarray(data0["vwnd"][:,:])
+u=np.asarray(data0["UGRD_10maboveground"][:,:])
+v=np.asarray(data0["VGRD_10maboveground"][:,:])
 var=np.asarray(data0["ErrorVariance"][:,:])
 x=np.asarray(data0["longitude"][:])
 y=np.asarray(data0["latitude"][:])
@@ -25,8 +25,8 @@ ne=e.shape[0]
 
 data1 = nc.Dataset(flin1,"r")
 t1=np.asarray(data1["time"][:])
-u1=np.asarray(data1["uwnd"][:,:])
-v1=np.asarray(data1["vwnd"][:,:])
+u1=np.asarray(data1["UGRD_10maboveground"][:,:])
+v1=np.asarray(data1["VGRD_10maboveground"][:,:])
 var1=np.asarray(data1["ErrorVariance"][:,:])
 
 um1=u1[0,:]
@@ -37,16 +37,11 @@ for k in range(nt):
     j=j[0].tolist()
     if len(j)==1:
             print("j="+str(j)+" : k="+str(k))
-            print(u.shape)
-            print(u1.shape)
-            print(var.shape)
-            print(var1.shape)
-
             u[k,ng1]=u[k,ng1]+(var[k,ng1]/(var[k,ng1]+var1[j,ng1]))*(u1[j,ng1]-u[k,ng1])
             v[k,ng1]=v[k,ng1]+(var[k,ng1]/(var[k,ng1]+var1[j,ng1]))*(v1[j,ng1]-v[k,ng1])
             var[k,ng1]=var[k,ng1] * ( var1[j,ng1] / ( var[k,ng1]+var1[j,ng1] ) )
 
-fill_value0=data0["uwnd"]._FillValue
+fill_value0=data0["UGRD_10maboveground"]._FillValue
 
 with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     ncout.createDimension('level' , 1)  
@@ -83,14 +78,14 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     tri_var.standard_name = 'element list'
     tri_var[:,:]=e
 
-    u_var=ncout.createVariable('uwnd', 'f4', ('time','node'),fill_value    = fill_value0)
+    u_var=ncout.createVariable('UGRD_10maboveground', 'f4', ('time','node'),fill_value    = fill_value0)
     u_var.long_name     = 'eastward_wind'
     u_var.units         = 'm/s'
     u_var.standard_name = 'eastward_wind'
     u_var.level = '10 m above ground'
     u_var[:,:]=u[:,:]
 
-    v_var=ncout.createVariable('vwnd', 'f4', ('time','node'),fill_value    = fill_value0)
+    v_var=ncout.createVariable('VGRD_10maboveground', 'f4', ('time','node'),fill_value    = fill_value0)
     v_var.long_name     = 'northward_wind'
     v_var.units         = 'm/s'
     v_var.standard_name = 'northward_wind'

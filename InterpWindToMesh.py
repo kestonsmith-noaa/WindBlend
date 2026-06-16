@@ -96,6 +96,11 @@ def CurvilinearGridCreateInterpWeights(xi,yi,x1,y1, weights_file):
       regrid_method=esmpy.RegridMethod.BILINEAR,
       unmapped_action=esmpy.UnmappedAction.IGNORE # Optional: Ignores missing/masked points
     )
+#Add number of rows and columns to weights file for clarity when constructing sparse matrix for interpolation
+    with nc.Dataset(weights_file, mode="a") as ds:
+        ds.Nrows = nn
+        ds.Ncols = n1
+    
     np.savetxt('Fi.txt', dst_field.data[...])
     np.savetxt('xi.txt', xi)
     np.savetxt('yi.txt', yi)
@@ -125,7 +130,6 @@ def CalculateDistanceToBoundary(xi,yi,x1,y1):
         if k%10000==0:
             print("calculating distance to boundary, "+str(k)+":"+ str(nn)+":"+str(k/nn) )
     return dist2bnd
-    #np.savetxt(dist2bnd_file, dist2bnd, '%f')
 
 def CalculateDistanceToInterpEnvelope(xi,yi,fi,SearchWidth):
 # Alternative distance to boundary calculation for use when interpolation envelope is 
@@ -163,8 +167,6 @@ def CalculateDistanceToInterpEnvelope(xi,yi,fi,SearchWidth):
             print("calculating distance to boundary, "+str(k)+":"+ str(nn)+":"+str(k/nn) )
     dist2bnd[jin]=din
     return dist2bnd
-
-
 
 
 # Main program
@@ -241,6 +243,17 @@ with xr.open_dataset(weights_file) as ds_s:
    row = ds_s['row'].values
    col = ds_s['col'].values
    weights = ds_s['S'].values
+   Nrows=ds_s.attrs.get('Nrows')
+   Ncols=ds_s.attrs.get('Ncols')
+   
+print("nn = "+str(nn)+": Nrows = "+str(Nrows))
+print("n1 = "+str(n1)+": Ncols = "+str(Ncols))
+if not ((nn==Nrows) and (n1==Ncols)):
+    print("Wrong matrix weights: number of rows from "+ mshfl +" = "+str(nn)+
+    " but number of rows in "+ weights_file +" = "+str(Nrows)+ 
+    ", number of spatial points in "+ flin +" = "+str(n1)+ 
+    " but number of columns in "+ weights_file +" = "+str(Ncols)  )
+    print("  You probably need to remove file "+ weights_file +" and rerun to generate appropriate weights")
 
 matrix = sp.coo_matrix((weights, (row-1, col-1)), shape=(nn,n1)).tocsr()
 print("sparse interpolation matrix")
@@ -268,7 +281,7 @@ j=np.where( Vp==fill_value0 )
 Up[j]=nan
 Vp[j]=nan
 
-#Cary out interpolation with sparse matrix multiplication
+#Carry out interpolation with sparse matrix multiplication
 u = matrix @ Up.T
 v = matrix @ Vp.T
 
@@ -291,7 +304,7 @@ v[j0,:]=nan
 #dist2bnd_file = "DistToBndy."+mshfl[meshslash:len(mshfl)-3]+dom+".txt"
 dist2bnd_file = "DistToBndy."+mshfl[meshslash:len(mshfl)-3]+dom+".nc"
 if os.path.isfile(dist2bnd_file):
-    print(f"Reusing existing weights: {weights_file}")
+    print(f"Reusing distance to file: {dist2bnd_file}")
     #dist2bnd = np.loadtxt(dist2bnd_file)
     with xr.open_dataset(dist2bnd_file) as ds_s:
         dist2bnd = ds_s['dist2bnd'].values
@@ -334,8 +347,6 @@ for k in range(nt):
 ##################################################################################
 # FINISHED: Assign forecast error variance based on distance to boundary and inputs
 ##################################################################################
-
-
 
 ne=ei.shape[0]
 
@@ -381,14 +392,14 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     d_var.standard_name = 'distance to boundary'
     d_var[:]=dist2bnd[:]
 
-    u_var=ncout.createVariable('uwnd', 'f4', ('time','node'),fill_value    = fill_value0)
+    u_var=ncout.createVariable('UGRD_10maboveground', 'f4', ('time','node'),fill_value    = fill_value0)
     u_var.long_name     = 'eastward_wind'
     u_var.units         = 'm/s'
     u_var.standard_name = 'eastward_wind'
     u_var.level = '10 m above ground'
     u_var[:,:]=u[:,:].T
 
-    v_var=ncout.createVariable('vwnd', 'f4', ('time','node'),fill_value    = fill_value0)
+    v_var=ncout.createVariable('VGRD_10maboveground', 'f4', ('time','node'),fill_value    = fill_value0)
     v_var.long_name     = 'northward_wind'
     v_var.units         = 'm/s'
     v_var.standard_name = 'northward_wind'

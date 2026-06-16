@@ -19,8 +19,8 @@ print("a new file(arg3="+flout+") .")
 data0 = nc.Dataset(flin,"r")
 
 t=np.asarray(data0["time"][:])
-u=np.asarray(data0["uwnd"][:,:])
-v=np.asarray(data0["vwnd"][:,:])
+u=np.asarray(data0["UGRD_10maboveground"][:,:])
+v=np.asarray(data0["VGRD_10maboveground"][:,:])
 var0=np.asarray(data0["ErrorVariance"][:,:])
 
 x=np.asarray(data0["longitude"][:])
@@ -32,11 +32,11 @@ data1 = nc.Dataset(flinNewTimes,"r")
 t1=np.asarray(data1["time"][:])
 
 #ensure we don't interpolate fill values
-fill_value0 = data0["uwnd"]._FillValue
+fill_value0 = data0["UGRD_10maboveground"]._FillValue
 nan=float('nan')
 jb=np.where(u==fill_value0)
 u[jb]=nan
-fill_value0 = data0["vwnd"]._FillValue
+fill_value0 = data0["VGRD_10maboveground"]._FillValue
 jb=np.where(v==fill_value0)
 v[jb]=nan
 
@@ -130,16 +130,16 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     d_var.standard_name = 'distance to boundary'
     d_var[:]=d[:]
 
-#    u_var=ncout.createVariable('uwnd', 'f4', ('node','time'),fill_value    = fill_value0)
-    u_var=ncout.createVariable('uwnd', 'f4', ('time','node'),fill_value    = fill_value0)
+#    u_var=ncout.createVariable('UGRD_10maboveground', 'f4', ('node','time'),fill_value    = fill_value0)
+    u_var=ncout.createVariable('UGRD_10maboveground', 'f4', ('time','node'),fill_value    = fill_value0)
     u_var.long_name     = 'eastward_wind'
     u_var.units         = 'm/s'
     u_var.standard_name = 'eastward_wind'
     u_var.level = '10 m above ground'
     u_var[:,:]=uf[:,:]
 
-#    v_var=ncout.createVariable('vwnd', 'f4', ('node','time'),fill_value    = fill_value0)
-    v_var=ncout.createVariable('vwnd', 'f4', ('time','node'),fill_value    = fill_value0)
+#    v_var=ncout.createVariable('VGRD_10maboveground', 'f4', ('node','time'),fill_value    = fill_value0)
+    v_var=ncout.createVariable('VGRD_10maboveground', 'f4', ('time','node'),fill_value    = fill_value0)
     v_var.long_name     = 'northward_wind'
     v_var.units         = 'm/s'
     v_var.standard_name = 'northward_wind'
