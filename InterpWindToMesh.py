@@ -175,7 +175,7 @@ nargin = len(sys.argv) - 1
 
 if nargin < 5 :
     print("missing argument for specifying spatial forecast variance")
-    print("call InterpWindToMesh.crvln.py flin mesh flout variance lambda")
+    print("call as: InterpWindToMesh.crvln.py flin mesh flout variance lambda [Extrapolate-optional]")
 
 flin=sys.argv[1]
 mshfl=sys.argv[2]
@@ -183,8 +183,15 @@ flout=sys.argv[3]
 ForecastErrorVariance=float(sys.argv[4]) #(m m /s /s)
 LambdaBndyErrorVariance=float(sys.argv[5]) #(km)
 
-xi, yi, ei = nwps.loadWW3Mesh(mshfl)
+# Don't use nearest neighbor interpolation unless 6th positive integer argument present.
+# This may be needed on boundary of RWPS mesh if node alignment is outside NBM OC domain
+Extrapolate=False
+if nargin >5:
+    if int(sys.argv[6])>0:
+        print("using nearest neighbor to extrapolate wind field beyond coverage")
+        Extrapolate=True
 
+xi, yi, ei = nwps.loadWW3Mesh(mshfl)
 nn=len(xi)
 
 if np.mean(xi)<0:
@@ -293,9 +300,32 @@ j0=j0[0].tolist()
 #np.savetxt('j0.txt', j0)
 u[j0,:]=nan
 v[j0,:]=nan
-
 ##################################################################################
 # FINISHED: Interpolate wind data using predefined weights
+##################################################################################
+
+##################################################################################
+# START: Extrapolate for nodes not covered by interpolator
+##################################################################################
+if Extrapolate:
+    from scipy.interpolate import NearestNDInterpolator
+    if not IsCrvLn:
+        x1 = np.tile(x1,(ny,1))
+        y1 = np.tile(y1,(nx,1)).T
+    x1v=np.transpose(x1).reshape(n1) # vectorize src nodes, consistant with Up, Vp
+    y1v=np.transpose(y1).reshape(n1)
+    srcp = np.array((x1v,y1v)).T
+    srcv = Up[0,:] #dummy input field
+    j=np.where(np.isnan(u[:,0]))
+    j=np.array(j[0]).tolist()
+    dstp = np.array((xi[j],yi[j])).T
+    interpolator = NearestNDInterpolator(srcp, srcv)
+    distances, jsrc = interpolator.tree.query(dstp)
+    # (x1v[jsrc], y1v[jsrc]), is the nearest point to (xi[j],yi[j]) in source 
+    u[j,:]=Up[:,jsrc].T
+    v[j,:]=Vp[:,jsrc].T
+##################################################################################
+# FINISHED: Extrapolate for nodes not covered by interpolator
 ##################################################################################
 
 ##################################################################################

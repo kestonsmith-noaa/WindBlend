@@ -68,7 +68,7 @@ mkdir $outdir
 #Convert NBM deom speed and direction to u,v
 python SpdDir2UVnbm.py $nbm_oc $nbm_oc_uv
 
-python InterpWindToMesh.py $nbm_oc_uv $mesh $rwps_oc 100. 0.
+python InterpWindToMesh.py $nbm_oc_uv $mesh $rwps_oc 100. 0. 1
 python InterpWindToMesh.py $rrfs_pr $mesh $rwps_pr 4. 150.
 python InterpWindToMesh.py $rrfs_hi $mesh $rwps_hi 4. 200.
 python InterpWindToMesh.py $rrfs_ak $mesh $rwps_ak 9. 500.
